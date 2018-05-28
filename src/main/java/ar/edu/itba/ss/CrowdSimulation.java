@@ -6,7 +6,6 @@ import java.util.Random;
 
 public class CrowdSimulation {
 
-    private final static int NUMBER_OF_PARTICLES = 10;
     private final static double MINIMUM_RADIUS = 0.25;
     private final static double MAXIMUM_RADIUS = 0.29;
     private final static double ELASTIC_CONSTANT = 1.2 * Math.pow(10, 5);
@@ -16,10 +15,13 @@ public class CrowdSimulation {
     private final static double SOCIAL_DISTANCE = 0.08; // Metres
     private final static double[] TARGET_POSITION = new double[]{0,0};
     private final static double DRIVING_TIME = 0.5;
+    private static double desiredSpeed = 0.8;
 
     public static void main(String args[]) throws CloneNotSupportedException {
-        List<Particle> particles = createParticles(NUMBER_OF_PARTICLES);
-        simulate(particles);
+        Configuration config = new CliParser().parseOptions(args);
+        List<Particle> particles = createParticles(config.getPedestrians());
+        desiredSpeed = config.getDesiredSpeed();
+        simulate(config, particles);
     }
 
     private static List<Particle> createParticles(int numberOfParticles){
@@ -45,9 +47,9 @@ public class CrowdSimulation {
         return particles;
     }
 
-    private static void simulate(List<Particle> particles) throws CloneNotSupportedException {
-        final double TIME = 20;
-        final int TIME2 = 10;
+    private static void simulate(Configuration config, List<Particle> particles) throws CloneNotSupportedException {
+        final double time = config.getTime();
+        final double animationTime = config.getFps();
         int iterations = 0;
         printParticles(iterations++, particles);
 
@@ -56,14 +58,14 @@ public class CrowdSimulation {
 
         Integrator integrator = new Beeman(dt);
 
-        for (double t = 0; t < TIME; t+=dt){
+        for (double t = 0; t < time; t+=dt){
 
             List<Particle> clones = cloneParticles(particles);
             integrator.updatePositions(particles, clones);
 
             integrator.updateSpeeds(particles, clones);
 
-            if (++dt2 % TIME2 == 0) {
+            if (++dt2 % animationTime == 0) {
                 printParticles(iterations++, particles);
             }
         }
@@ -99,7 +101,6 @@ public class CrowdSimulation {
                 force[0] += SOCIAL_FORCE * Math.exp(-Math.abs(dx) / SOCIAL_DISTANCE) * ex;
                 force[1] += SOCIAL_FORCE * Math.exp(-Math.abs(dy) / SOCIAL_DISTANCE) * ey;
 
-                double desiredSpeed = 0.8;
                 double dxTarget = TARGET_POSITION[0] - p.position[0];
                 double dyTarget = TARGET_POSITION[1] - p.position[1];
                 mod = Math.sqrt(Math.pow(dxTarget, 2) + Math.pow(dyTarget, 2));
