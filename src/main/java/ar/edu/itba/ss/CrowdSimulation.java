@@ -13,7 +13,10 @@ public class CrowdSimulation {
     private final static double MASS = 60;
     private final static double SOCIAL_FORCE = 2000; // Newton
     private final static double SOCIAL_DISTANCE = 0.08; // Metres
-    private final static double[] TARGET_POSITION = new double[]{0,0};
+    private final static double ROOM_LENGTH = 20;
+    private final static double DOOR_LENGTH = 1.2;
+    private final static double WALL_Y = 10;
+    private final static double[] TARGET_POSITION = new double[]{ROOM_LENGTH/2, 0};
     private final static double DRIVING_TIME = 0.5;
     private static double desiredSpeed = 0.8;
 
@@ -39,10 +42,15 @@ public class CrowdSimulation {
 //            x += MAXIMUM_RADIUS * 2;
 //            y += MINIMUM_RADIUS * 2;
 //        }
-        double radius = r.nextDouble() * (MAXIMUM_RADIUS - MINIMUM_RADIUS) + MINIMUM_RADIUS;
-        particles.add(new Particle(1, new double[]{0,-1}, radius, MASS));
-        radius = r.nextDouble() * (MAXIMUM_RADIUS - MINIMUM_RADIUS) + MINIMUM_RADIUS;
-        particles.add(new Particle(2, new double[]{0,1}, radius, MASS));
+//        double radius = r.nextDouble() * (MAXIMUM_RADIUS - MINIMUM_RADIUS) + MINIMUM_RADIUS;
+//        particles.add(new Particle(1, new double[]{0, WALL_Y + ROOM_LENGTH/3}, radius, MASS));
+//        radius = r.nextDouble() * (MAXIMUM_RADIUS - MINIMUM_RADIUS) + MINIMUM_RADIUS;
+//        particles.add(new Particle(2, new double[]{ROOM_LENGTH, WALL_Y + ROOM_LENGTH/3}, radius, MASS));
+
+        for (int i = 0; i < numberOfParticles; i++){
+            double radius = r.nextDouble() * (MAXIMUM_RADIUS - MINIMUM_RADIUS) + MINIMUM_RADIUS;
+            particles.add(new Particle(i+1, new double[]{i*3*MAXIMUM_RADIUS, WALL_Y + ROOM_LENGTH/3}, radius, MASS));
+        }
 
         return particles;
     }
@@ -74,6 +82,10 @@ public class CrowdSimulation {
     public static double[] forces(Particle p, List<Particle> particles) {
 
         double[] force = new double[2];
+
+        if (contactWithFloor(p)) {
+            force = floorForce(p);
+        }
 
         for (Particle neighbour : particles) {
 
@@ -113,6 +125,36 @@ public class CrowdSimulation {
         }
 
         return force;
+    }
+
+    private static double[] floorForce(Particle p) {
+        double force[] = new double[2];
+        double superposition = p.radius - (Math.abs(p.position[1] - WALL_Y));
+
+        if (Math.abs(superposition) > 0) {
+
+            double dx = 0;
+            double dy = -Math.abs(p.position[1] - WALL_Y); //TODO: check
+
+            double mod = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+            double ex = (dx / mod);
+            double ey = (dy / mod);
+
+            double relativeSpeed = p.speed[0] * ex + p.speed[1] * ey;
+
+            double normalForce = -ELASTIC_CONSTANT * superposition - VISCOUS_CONSTANT * relativeSpeed;
+
+            force[0] += normalForce * ex;
+            force[1] += normalForce * ey;
+        }
+
+        return force;
+    }
+
+    private static boolean contactWithFloor(Particle p) {
+        return p.position[1] < (p.radius + WALL_Y) &&
+                (p.position[0] < (p.radius + ROOM_LENGTH/2 - DOOR_LENGTH/2) ||
+                        p.position[0] > (ROOM_LENGTH/2 + DOOR_LENGTH/2 - p.radius));
     }
 
     private static void printParticles(int iteration, List<Particle> particles){
