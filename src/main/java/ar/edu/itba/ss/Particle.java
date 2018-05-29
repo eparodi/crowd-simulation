@@ -41,4 +41,7 @@ public class Particle implements Cloneable{
         return (Particle) super.clone();
     }
 
+    public double getSpeedModule() {
+        return Math.sqrt(Math.pow(speed[0], 2) + Math.pow(speed[1], 2));
+    }
 }

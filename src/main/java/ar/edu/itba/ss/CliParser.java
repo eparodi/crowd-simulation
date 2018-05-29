@@ -6,9 +6,9 @@ import static java.lang.System.exit;
 
 public class CliParser {
 
-    private double time = 20;
-    private double fps = 10;
-    private int pedestrians = 200;
+    private double time = 10;
+    private double fps = 1000;
+    private int pedestrians = 100;
     private double speed = 0.8; // m/s
 
     private static Options createOptions(){

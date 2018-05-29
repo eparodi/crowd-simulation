@@ -39,12 +39,12 @@ public class CrowdSimulation {
             double y;
 
             do {
-                x = randomCoord(radius);
-                y = randomCoord(radius);
+                x = randomCoord(radius, 0);
+                y = randomCoord(radius, WALL_Y);
             }
             while (!validCords(x,y, radius, particles));
 
-            particles.add(new Particle(i+1, new double[]{x, y + WALL_Y}, radius, MASS));
+            particles.add(new Particle(i+1, new double[]{x, y}, radius, MASS));
         }
 
         return particles;
@@ -53,10 +53,11 @@ public class CrowdSimulation {
     /**
      * Returns a random coordinate between the radius and L - radius.
      * @param radius radius of the particle.
+     * @param min min coordinate
      * @return a coordinate in the (radius, L - radius) interval.
      */
-    private static double randomCoord(double radius){
-        return  radius + (ROOM_LENGTH - 2 * radius) * Math.random();
+    private static double randomCoord(double radius, double min){
+        return  min + radius + (ROOM_LENGTH - 2 * radius) * Math.random();
     }
 
     /**
@@ -97,6 +98,8 @@ public class CrowdSimulation {
 
             integrator.updateSpeeds(particles, clones);
 
+            //particles.removeIf(p -> p.position[1] < 1);
+
             if (++dt2 % animationTime == 0) {
                 printParticles(iterations++, particles);
             }
@@ -107,8 +110,8 @@ public class CrowdSimulation {
 
         double[] force = new double[2];
 
-        if (contactWithFloor(p)) {
-            force = floorForce(p);
+        if (contactWithWall(p)) {
+            force = wallForce(p);
         }
 
         for (Particle neighbour : particles) {
@@ -167,7 +170,7 @@ public class CrowdSimulation {
         return target;
     }
 
-    private static double[] floorForce(Particle p) {
+    private static double[] wallForce(Particle p) {
         double force[] = new double[2];
         double superposition = p.radius - (Math.abs(p.position[1] - WALL_Y));
 
@@ -191,7 +194,7 @@ public class CrowdSimulation {
         return force;
     }
 
-    private static boolean contactWithFloor(Particle p) {
+    private static boolean contactWithWall(Particle p) {
         return p.position[1] > WALL_Y && p.position[1] < (p.radius + WALL_Y) &&
                 (p.position[0] < (p.radius + ROOM_LENGTH/2 - DOOR_LENGTH/2) ||
                         p.position[0] > (ROOM_LENGTH/2 + DOOR_LENGTH/2 - p.radius));
@@ -201,7 +204,7 @@ public class CrowdSimulation {
         System.out.println(particles.size());
         System.out.println(iteration);
         for (Particle p: particles)
-            System.out.println(p.position[0] + "\t" + p.position[1] + "\t" + p.radius);
+            System.out.println(p.position[0] + "\t" + p.position[1] + "\t" + p.radius + "\t" + p.getSpeedModule());
     }
 
     private static List<Particle> cloneParticles(List<Particle> particles) throws CloneNotSupportedException {
