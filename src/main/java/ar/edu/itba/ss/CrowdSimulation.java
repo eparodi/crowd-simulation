@@ -10,7 +10,7 @@ public class CrowdSimulation {
     private final static double MAXIMUM_RADIUS = 0.29;
     private final static double ELASTIC_CONSTANT = 1.2 * Math.pow(10, 5);
     private final static double VISCOUS_CONSTANT = 2.4 * Math.pow(10, 5);
-    private final static double MASS = 60;
+    private final static double MASS = 80;
     private final static double SOCIAL_FORCE = 2000; // Newton
     private final static double SOCIAL_DISTANCE = 0.08; // Metres
     private final static double ROOM_LENGTH = 20;
@@ -30,29 +30,53 @@ public class CrowdSimulation {
     private static List<Particle> createParticles(int numberOfParticles){
         List<Particle> particles = new LinkedList<>();
         Random r = new Random();
-//        double x = -10;
-//        double y = -10;
-//        for(int i = 0; i < numberOfParticles; i++){
-//            double radius = r.nextDouble() * (MAXIMUM_RADIUS - MINIMUM_RADIUS) + MINIMUM_RADIUS;
-//            if (x + radius >= 10)
-//                x = -10 + radius;
-//            if (y + radius >= 10)
-//                y = -10 + radius;
-//            particles.add(new Particle(i, new double[]{x,y}, radius, MASS)); // TODO: Ask mass.
-//            x += MAXIMUM_RADIUS * 2;
-//            y += MINIMUM_RADIUS * 2;
-//        }
-//        double radius = r.nextDouble() * (MAXIMUM_RADIUS - MINIMUM_RADIUS) + MINIMUM_RADIUS;
-//        particles.add(new Particle(1, new double[]{0, WALL_Y + ROOM_LENGTH/3}, radius, MASS));
-//        radius = r.nextDouble() * (MAXIMUM_RADIUS - MINIMUM_RADIUS) + MINIMUM_RADIUS;
-//        particles.add(new Particle(2, new double[]{ROOM_LENGTH, WALL_Y + ROOM_LENGTH/3}, radius, MASS));
 
         for (int i = 0; i < numberOfParticles; i++){
+
             double radius = r.nextDouble() * (MAXIMUM_RADIUS - MINIMUM_RADIUS) + MINIMUM_RADIUS;
-            particles.add(new Particle(i+1, new double[]{i*3*MAXIMUM_RADIUS, WALL_Y + ROOM_LENGTH/3}, radius, MASS));
+
+            double x;
+            double y;
+
+            do {
+                x = randomCoord(radius);
+                y = randomCoord(radius);
+            }
+            while (!validCords(x,y, radius, particles));
+
+            particles.add(new Particle(i+1, new double[]{x, y + WALL_Y}, radius, MASS));
         }
 
         return particles;
+    }
+
+    /**
+     * Returns a random coordinate between the radius and L - radius.
+     * @param radius radius of the particle.
+     * @return a coordinate in the (radius, L - radius) interval.
+     */
+    private static double randomCoord(double radius){
+        return  radius + (ROOM_LENGTH - 2 * radius) * Math.random();
+    }
+
+    /**
+     * Checks if there is already a particle on that coordinates.
+     * @param x coordinate to check.
+     * @param y coordinate to check.
+     * @param radius radius of the new particle.
+     * @param particles list of particles in the cell.
+     * @return true if there is already a particle on the given coordinates, false otherwise.
+     */
+    private static boolean validCords(double x, double y, double radius, List<Particle> particles) {
+
+        for (Particle p: particles){
+            boolean valid = Math.pow(p.position[0] - x, 2) + Math.pow(p.position[1] - y, 2) > Math.pow(p.radius + radius, 2);
+            if (!valid){
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static void simulate(Configuration config, List<Particle> particles) throws CloneNotSupportedException {
@@ -61,7 +85,7 @@ public class CrowdSimulation {
         int iterations = 0;
         printParticles(iterations++, particles);
 
-        double dt = 0.01*Math.sqrt(MASS/ELASTIC_CONSTANT);
+        double dt = Math.pow(10, -5);
         int dt2 = 0;
 
         Integrator integrator = new Beeman(dt);
@@ -113,8 +137,9 @@ public class CrowdSimulation {
                 force[0] += SOCIAL_FORCE * Math.exp(-Math.abs(dx) / SOCIAL_DISTANCE) * ex;
                 force[1] += SOCIAL_FORCE * Math.exp(-Math.abs(dy) / SOCIAL_DISTANCE) * ey;
 
-                double dxTarget = TARGET_POSITION[0] - p.position[0];
-                double dyTarget = TARGET_POSITION[1] - p.position[1];
+                double[] target = getTarget(p);
+                double dxTarget = target[0] - p.position[0];
+                double dyTarget = target[1] - p.position[1];
                 mod = Math.sqrt(Math.pow(dxTarget, 2) + Math.pow(dyTarget, 2));
                 ex = dxTarget / mod;
                 ey = dyTarget / mod;
@@ -127,11 +152,26 @@ public class CrowdSimulation {
         return force;
     }
 
+    private static double[] getTarget(Particle p) {
+        double target[];
+        double doorX = ROOM_LENGTH/2 - DOOR_LENGTH/2;
+
+        if (p.position[0] < doorX){
+            target = new double[]{doorX + 2*p.radius, WALL_Y};
+        }else if(p.position[0] > ROOM_LENGTH/2 + DOOR_LENGTH/2){
+            target = new double[]{doorX + DOOR_LENGTH - 2*p.radius, WALL_Y};
+        }else{
+            target = TARGET_POSITION;
+        }
+
+        return target;
+    }
+
     private static double[] floorForce(Particle p) {
         double force[] = new double[2];
         double superposition = p.radius - (Math.abs(p.position[1] - WALL_Y));
 
-        if (Math.abs(superposition) > 0) {
+        if (superposition > 0) {
 
             double dx = 0;
             double dy = -Math.abs(p.position[1] - WALL_Y); //TODO: check
@@ -152,7 +192,7 @@ public class CrowdSimulation {
     }
 
     private static boolean contactWithFloor(Particle p) {
-        return p.position[1] < (p.radius + WALL_Y) &&
+        return p.position[1] > WALL_Y && p.position[1] < (p.radius + WALL_Y) &&
                 (p.position[0] < (p.radius + ROOM_LENGTH/2 - DOOR_LENGTH/2) ||
                         p.position[0] > (ROOM_LENGTH/2 + DOOR_LENGTH/2 - p.radius));
     }
