@@ -1,11 +1,12 @@
 package ar.edu.itba.ss;
 
 import java.util.List;
+import java.util.Set;
 
 public interface Integrator {
 
-    void updatePositions(List<Particle> particles, List<Particle> oldParticles);
+    void updatePositions(Set<Particle> particles);
 
-    void updateSpeeds(List<Particle> particles, List<Particle> oldParticles);
+    void updateSpeeds(Set<Particle> particles);
 
 }

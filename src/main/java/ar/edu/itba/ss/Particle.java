@@ -1,5 +1,7 @@
 package ar.edu.itba.ss;
 
+import java.util.Set;
+
 public class Particle implements Cloneable{
 
     protected int id;
@@ -9,6 +11,8 @@ public class Particle implements Cloneable{
     protected double mass;
     protected double[] acceleration = null;// new double[]{0,0};
     protected double[] previousAcceleration = new double[]{0,0};
+    protected Set<Particle> neighbors;
+    Integer cell = null;
 
     public Particle(int id, double[] position, double radius, double mass){
         this.id = id;
