@@ -24,7 +24,7 @@ public class CellIndexMethod{
     private Integer findKeyOfParticle(Particle p){
         int cellX = (int) Math.floor(p.position[0] / this.cellLength);
         int cellY = (int) Math.floor(p.position[1] / this.cellLength);
-        if (cellX > this.matrixSizeRows || cellX < 0 || cellY > this.matrixSizeColumns || cellY < 0){
+        if (cellX > this.matrixSizeRows || cellX < 0 || cellY >= this.matrixSizeColumns || cellY < 0){
             return null;
         }
         return cellY * this.matrixSizeRows + cellX;
@@ -65,7 +65,7 @@ public class CellIndexMethod{
         if (key != null){
             p.cell = key;
             if (cells.get(key) == null){
-                System.out.println(key + " " + p.position[0] + " " + p.position[1]);
+                System.err.println(key + " " + p.position[0] + " " + p.position[1]);
             }
             particles.add(p);
             cells.get(key).add(p);
@@ -98,7 +98,9 @@ public class CellIndexMethod{
             if (!particle.equals(p)) {
                 try {
                     p.neighbors.add(particle.getClone());
-                    particle.neighbors.add(p.getClone());
+                    if (!particle.isWall){
+                        particle.neighbors.add(p.getClone());
+                    }
                 } catch (CloneNotSupportedException e) {
                     e.printStackTrace();
                 }

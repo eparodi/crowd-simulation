@@ -1,5 +1,7 @@
 package ar.edu.itba.ss;
 
+import javafx.beans.property.ReadOnlyMapProperty;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -20,7 +22,7 @@ public class CrowdSimulation {
     private final static double SOCIAL_DISTANCE = 0.08; // Metres
     private final static double ROOM_LENGTH = 20;
     private final static double DOOR_LENGTH = 1.2;
-    private final static double WALL_Y = 10;
+    private final static double WALL_Y = 2;
     private final static double[] TARGET_POSITION = new double[]{ROOM_LENGTH/2, -1};
     private final static double DRIVING_TIME = 0.5;
     private static double desiredSpeed = 0.8;
@@ -58,6 +60,8 @@ public class CrowdSimulation {
             while (!validCords(x,y, radius, cellIndexMethod.particles));
             cellIndexMethod.putParticle(new Particle(i+1, new double[]{x, y}, radius, MASS));
         }
+        cellIndexMethod.putParticle(new Particle(numberOfParticles + 1, new double[]{ROOM_LENGTH/2 - DOOR_LENGTH/2, WALL_Y}, 0, MASS, true));
+        cellIndexMethod.putParticle(new Particle(numberOfParticles + 2, new double[]{ROOM_LENGTH/2 + DOOR_LENGTH/2, WALL_Y}, 0, MASS, true));
 
     }
 
@@ -103,7 +107,7 @@ public class CrowdSimulation {
         Integrator integrator = new Beeman(dt);
         cellIndexMethod.setNeighbors();
 
-        for (double t = 0; cellIndexMethod.particles.size() != 0; t+=dt){
+        for (double t = 0; cellIndexMethod.particles.size() > 2; t+=dt){
 
             integrator.updatePositions(cellIndexMethod.particles);
 
@@ -139,32 +143,26 @@ public class CrowdSimulation {
 
                 double dx = neighbour.position[0] - p.position[0];
                 double dy = neighbour.position[1] - p.position[1];
-                double mod = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-                double ex = (dx / mod);
-                double ey = (dy / mod);
+                double ex = (dx / distance);
+                double ey = (dy / distance);
 
                 if (superposition > 0) {
                     double relativeSpeed = (p.speed[0] - neighbour.speed[0]) * (-ey) + (p.speed[1] - neighbour.speed[1]) * ex;
 
-                    double normalForce = -ELASTIC_CONSTANT * superposition;// - KT * superposition * relativeSpeed;
+                    double normalForce = -ELASTIC_CONSTANT * superposition;
 
                     force[0] += normalForce * ex;
                     force[1] += normalForce * ey;
 
-                    double tangentForce = - KT * superposition * relativeSpeed;
+                    double tangentForce = -KT * superposition * relativeSpeed;
                     force[0] += tangentForce * (-ey);
                     force[1] += tangentForce * (ex);
                 }
-                dx = Math.abs(dx) - (p.radius - neighbour.radius) * dx/distance;
-                dy = Math.abs(dy) - (p.radius - neighbour.radius) * dy/distance;
-                /* Social force */
-                force[0] += SOCIAL_FORCE * Math.exp(-dx / SOCIAL_DISTANCE) * ex;
-                force[1] += SOCIAL_FORCE * Math.exp(-dy / SOCIAL_DISTANCE) * ey;
-
-
+                double socialForce = -SOCIAL_FORCE * Math.exp(superposition/ SOCIAL_DISTANCE);
+                force[0] += socialForce * ex;
+                force[1] += socialForce * ey;
             }
         }
-
         double[] target = getTarget(p);
         double dxTarget = target[0] - p.position[0];
         double dyTarget = target[1] - p.position[1];
@@ -182,15 +180,12 @@ public class CrowdSimulation {
         double target[];
         double doorX = ROOM_LENGTH/2 - DOOR_LENGTH/2;
 
-        if (p.position[0] < doorX){
-            target = new double[]{doorX + MAXIMUM_RADIUS, WALL_Y};
-        }else if(p.position[0] > ROOM_LENGTH/2 + DOOR_LENGTH/2){
-            target = new double[]{doorX + DOOR_LENGTH - MAXIMUM_RADIUS, WALL_Y};
+        if (p.position[0] < doorX && p.position[1] > WALL_Y){
+            target = new double[]{doorX + p.radius, WALL_Y};
+        }else if(p.position[0] > doorX + DOOR_LENGTH && p.position[1] > WALL_Y){
+            target = new double[]{doorX + DOOR_LENGTH - p.radius, WALL_Y};
         }else{
-//            double targetX = new Random().nextDouble() * (DOOR_LENGTH - 2*p.radius) + (ROOM_LENGTH - DOOR_LENGTH) / 2;
-//            target = new double[]{targetX, -1};
-//            target = new double[]{p.position[0], -1};
-            target = TARGET_POSITION;
+            target = new double[]{ROOM_LENGTH/2, -1};
         }
 
         return target;
@@ -209,14 +204,22 @@ public class CrowdSimulation {
             double ex = (dx / mod);
             double ey = (dy / mod);
 
-            double relativeSpeed = p.speed[0] * ex + p.speed[1] * ey;
+            double relativeSpeed = p.speed[0] * (-ey) + p.speed[1] * ex;
 
-            double normalForce = -ELASTIC_CONSTANT * superposition - KT * relativeSpeed;
+            double normalForce = -ELASTIC_CONSTANT * superposition;
 
             force[0] += normalForce * ex;
             force[1] += normalForce * ey;
+
+            double tangentForce = - KT * superposition * relativeSpeed;
+            force[0] += tangentForce * (-ey);
+            force[1] += tangentForce * (ex);
         }
 
+        if (p.position[0] + p.radius < ROOM_LENGTH/2 - DOOR_LENGTH/2 &&
+                p.position[0] - p.radius > ROOM_LENGTH/2 + DOOR_LENGTH/2){
+            force[0] += -SOCIAL_FORCE * Math.exp(-(Math.abs(p.position[1] - WALL_Y) - p.radius) / SOCIAL_DISTANCE);
+        }
         return force;
     }
 
@@ -231,14 +234,6 @@ public class CrowdSimulation {
         System.out.println(iteration);
         for (Particle p: cellIndexMethod.particles)
             System.out.println(p.position[0] + "\t" + p.position[1] + "\t" + p.radius + "\t" + p.getSpeedModule());
-    }
-
-    private static List<Particle> cloneParticles(List<Particle> particles) throws CloneNotSupportedException {
-        List<Particle> clones = new LinkedList<>();
-        for (Particle p: particles){
-            clones.add(p.getClone());
-        }
-        return clones;
     }
 
     private static void updateCells(){

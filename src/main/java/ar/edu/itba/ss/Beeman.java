@@ -16,6 +16,9 @@ public class Beeman implements Integrator{
 
         for (Particle p: particles){
 
+            if (p.isWall)
+                break;
+
             if (p.acceleration == null){
                 p.acceleration = getAcceleration(p);
             }
@@ -35,6 +38,8 @@ public class Beeman implements Integrator{
 
         for (Particle p : particles) {
 
+            if (p.isWall)
+                break;
 
             double[] oldSpeed = new double[]{p.speed[0], p.speed[1]};
 

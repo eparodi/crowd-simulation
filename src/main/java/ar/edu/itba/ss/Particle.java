@@ -12,6 +12,7 @@ public class Particle implements Cloneable{
     protected double[] acceleration = null;// new double[]{0,0};
     protected double[] previousAcceleration = new double[]{0,0};
     protected Set<Particle> neighbors;
+    protected boolean isWall = false;
     Integer cell = null;
 
     public Particle(int id, double[] position, double radius, double mass){
@@ -19,6 +20,14 @@ public class Particle implements Cloneable{
         this.position = position;
         this.radius = radius;
         this.mass = mass;
+    }
+
+    public Particle(int id, double[] position, double radius, double mass, boolean isWall){
+        this.id = id;
+        this.position = position;
+        this.radius = radius;
+        this.mass = mass;
+        this.isWall = isWall;
     }
 
     public double getDistanceTo(Particle neighbour) {
