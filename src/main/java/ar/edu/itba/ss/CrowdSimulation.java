@@ -133,6 +133,9 @@ public class CrowdSimulation {
             force = wallForce(p);
         }
 
+        force = lateralCollision(p, force, 0);
+        force = lateralCollision(p, force, ROOM_LENGTH);
+
         for (Particle neighbour : p.neighbors) {
 
             if (!neighbour.equals(p)){
@@ -218,8 +221,35 @@ public class CrowdSimulation {
 
         if (p.position[0] + p.radius < ROOM_LENGTH/2 - DOOR_LENGTH/2 &&
                 p.position[0] - p.radius > ROOM_LENGTH/2 + DOOR_LENGTH/2){
-            force[0] += -SOCIAL_FORCE * Math.exp(-(Math.abs(p.position[1] - WALL_Y) - p.radius) / SOCIAL_DISTANCE);
+            force[1] += -SOCIAL_FORCE * Math.exp(-(Math.abs(p.position[1] - WALL_Y) - p.radius) / SOCIAL_DISTANCE);
         }
+        return force;
+    }
+
+    private static double[] lateralCollision(Particle p, double[] force, double wallX){
+        double superposition = p.radius - (Math.abs(p.position[0] - wallX));
+
+        double dx = wallX - p.position[0];
+        double dy = 0;
+
+        double mod = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+        double ex = (dx / mod);
+        double ey = (dy / mod);
+
+        if (superposition > 0) {
+            double relativeSpeed = p.speed[0] * (-ey) + p.speed[1] * ex;
+
+            double normalForce = -ELASTIC_CONSTANT * superposition;
+
+            force[0] += normalForce * ex;
+            force[1] += normalForce * ey;
+
+            double tangentForce = - KT * superposition * relativeSpeed;
+            force[0] += tangentForce * (-ey);
+            force[1] += tangentForce * (ex);
+        }
+
+        force[0] += -SOCIAL_FORCE * Math.exp(-(Math.abs(p.position[0] - wallX) - p.radius) / SOCIAL_DISTANCE) * ex;
         return force;
     }
 
