@@ -18,7 +18,6 @@ public class CrowdSimulation {
     private final static double ROOM_LENGTH = 20;
     private final static double DOOR_LENGTH = 1.2;
     private final static double WALL_Y = 2;
-    private final static double[] TARGET_POSITION = new double[]{ROOM_LENGTH/2, -1};
     private final static double DRIVING_TIME = 0.5;
     private static double desiredSpeed = 0.8;
     private final static double CELL_INDEX_RADIUS = 0.6;
@@ -43,6 +42,7 @@ public class CrowdSimulation {
         createParticles(config.getPedestrians());
         desiredSpeed = config.getDesiredSpeed();
         simulate(config);
+        statsPrinter.close();
     }
 
     private static void createParticles(int numberOfParticles){
@@ -98,7 +98,6 @@ public class CrowdSimulation {
     }
 
     private static void simulate(Configuration config){
-        final double time = config.getTime();
         final double animationTime = config.getFps();
         int iterations = 0;
         printParticles(iterations++);
@@ -203,7 +202,7 @@ public class CrowdSimulation {
         if (superposition > 0) {
 
             double dx = 0;
-            double dy = -Math.abs(p.position[1] - WALL_Y); //TODO: check
+            double dy = -Math.abs(p.position[1] - WALL_Y);
 
             double mod = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
             double ex = (dx / mod);
