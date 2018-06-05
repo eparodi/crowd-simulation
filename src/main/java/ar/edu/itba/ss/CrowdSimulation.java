@@ -1,11 +1,6 @@
 package ar.edu.itba.ss;
 
-import javafx.beans.property.ReadOnlyMapProperty;
-
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -28,11 +23,18 @@ public class CrowdSimulation {
     private static double desiredSpeed = 0.8;
     private final static double CELL_INDEX_RADIUS = 0.6;
     private static CellIndexMethod cellIndexMethod;
+    private static PrintWriter statsPrinter;
 
     public static void main(String args[]) throws CloneNotSupportedException {
         try {
             System.setOut(new PrintStream(new FileOutputStream("data.xyz")));
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            FileWriter fileWriter = new FileWriter("stats.txt");
+            statsPrinter = new PrintWriter(fileWriter);
+        } catch (IOException e) {
             e.printStackTrace();
         }
         Configuration config = new CliParser().parseOptions(args);
@@ -111,13 +113,13 @@ public class CrowdSimulation {
 
             integrator.updatePositions(cellIndexMethod.particles);
 
-            updateCells();
+            updateCells(t);
 
             cellIndexMethod.setNeighbors();
 
             integrator.updateSpeeds(cellIndexMethod.particles);
 
-            updateCells();
+            updateCells(t);
 
             if (++dt2 % animationTime == 0) {
                 printParticles(iterations++);
@@ -266,7 +268,7 @@ public class CrowdSimulation {
             System.out.println(p.position[0] + "\t" + p.position[1] + "\t" + p.radius + "\t" + p.getSpeedModule());
     }
 
-    private static void updateCells(){
+    private static void updateCells(double time){
         List<Particle> removeParticles = new LinkedList<>();
         for (Particle p: cellIndexMethod.particles) {
             if (!cellIndexMethod.putParticle(p)){
@@ -275,6 +277,7 @@ public class CrowdSimulation {
         }
         for (Particle p: removeParticles){
             cellIndexMethod.particles.remove(p);
+            statsPrinter.println(time);
         }
     }
 }
