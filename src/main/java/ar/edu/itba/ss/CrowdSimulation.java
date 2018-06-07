@@ -24,19 +24,20 @@ public class CrowdSimulation {
     private static CellIndexMethod cellIndexMethod;
     private static PrintWriter statsPrinter;
 
-    public static void main(String args[]) throws CloneNotSupportedException {
+    public static void main(String args[]) {
+        Configuration config = new CliParser().parseOptions(args);
+
         try {
-            System.setOut(new PrintStream(new FileOutputStream("data.xyz")));
+            System.setOut(new PrintStream(new FileOutputStream(config.getOutputFile())));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         try {
-            FileWriter fileWriter = new FileWriter("stats.txt");
+            FileWriter fileWriter = new FileWriter(config.getStatsFile());
             statsPrinter = new PrintWriter(fileWriter);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Configuration config = new CliParser().parseOptions(args);
         cellIndexMethod = new CellIndexMethod(ROOM_LENGTH, ROOM_LENGTH + WALL_Y, CELL_INDEX_RADIUS);
 
         createParticles(config.getPedestrians());

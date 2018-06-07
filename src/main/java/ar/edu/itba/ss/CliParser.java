@@ -6,18 +6,20 @@ import static java.lang.System.exit;
 
 public class CliParser {
 
-    private double time = 10;
     private double fps = 1000;
     private int pedestrians = 100;
     private double speed = 0.8; // m/s
+    private String outputFile = "data.xyz";
+    private String statsFile = "stats.txt";
 
     private static Options createOptions(){
         Options options = new Options();
         options.addOption("h", "help", false, "Shows this screen.");
-        options.addOption("t", "time", true, "Total time of the simulation.");
         options.addOption("p", "pedestrians", true, "Number of pedestrians.");
         options.addOption("s", "desiredSpeed", true, "Desired desiredSpeed of the pedestrians.");
         options.addOption("fps", "fps", true, "Time step for the animation.");
+        options.addOption("of", "outputFile", true, "Output file for animations.");
+        options.addOption("sf", "statFile", true, "Output file for stats.");
 
         return options;
     }
@@ -33,10 +35,6 @@ public class CliParser {
                 help(options);
             }
 
-            if (cmd.hasOption("t")) {
-                time = Double.parseDouble(cmd.getOptionValue("t"));
-            }
-
             if (cmd.hasOption("fps")) {
                 fps = Double.parseDouble(cmd.getOptionValue("fps"));
             }
@@ -48,12 +46,21 @@ public class CliParser {
             if (cmd.hasOption("s")) {
                 speed = Double.parseDouble(cmd.getOptionValue("s"));
             }
+
+            if (cmd.hasOption("sf")) {
+                statsFile = cmd.getOptionValue("sf");
+            }
+
+            if (cmd.hasOption("of")) {
+                outputFile = cmd.getOptionValue("of");
+            }
+
         }catch (Exception e){
             System.out.println("Argument not recognized.");
             help(options);
         }
 
-        return new Configuration(time, fps, pedestrians, speed);
+        return new Configuration(fps, pedestrians, speed, statsFile, outputFile);
     }
 
     private void help(Options options){
