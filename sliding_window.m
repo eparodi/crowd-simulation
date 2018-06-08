@@ -17,8 +17,8 @@ function sliding_window(input_file, dt, window_size, output_file)
   endfor
   i = 1;
   window_arr = [];
-  while i + window_size < columns(events)
-    window_arr = [window_arr; times(i), sum(events(i:i+window_size))];
+  while i + window_size - 1 < columns(events)
+    window_arr = [window_arr; times(i), times(i+window_size), sum(events(i:i+window_size - 1))];
     i += 1;
   endwhile
   % save output_file window_arr
