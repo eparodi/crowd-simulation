@@ -11,9 +11,9 @@ public class Beeman implements Integrator{
     }
 
     @Override
-    public void updatePositions(Set<Particle> particles) {
+    public void updatePositions(Set<Pedestrian> pedestrians) {
 
-        for (Particle p: particles){
+        for (Pedestrian p: pedestrians){
 
             if (p.isWall)
                 break;
@@ -33,9 +33,9 @@ public class Beeman implements Integrator{
     }
 
     @Override
-    public void updateSpeeds(Set<Particle> particles){
+    public void updateSpeeds(Set<Pedestrian> pedestrians){
 
-        for (Particle p : particles) {
+        for (Pedestrian p : pedestrians) {
 
             if (p.isWall)
                 break;
@@ -60,7 +60,7 @@ public class Beeman implements Integrator{
         }
     }
 
-    private double[] getAcceleration(Particle p){
+    private double[] getAcceleration(Pedestrian p){
         double[] newForce = CrowdSimulation.forces(p);
         newForce[0] = newForce[0] / p.mass;
         newForce[1] = newForce[1] / p.mass;

@@ -60,11 +60,11 @@ public class CrowdSimulation {
                 x = randomCoord(radius, 0);
                 y = randomCoord(radius, WALL_Y);
             }
-            while (!validCords(x,y, radius, cellIndexMethod.particles));
-            cellIndexMethod.putParticle(new Particle(i+1, new double[]{x, y}, radius, MASS));
+            while (!validCords(x,y, radius, cellIndexMethod.pedestrians));
+            cellIndexMethod.putParticle(new Pedestrian(i+1, new double[]{x, y}, radius, MASS));
         }
-        cellIndexMethod.putParticle(new Particle(numberOfParticles + 1, new double[]{ROOM_LENGTH/2 - DOOR_LENGTH/2, WALL_Y}, 0, MASS, true));
-        cellIndexMethod.putParticle(new Particle(numberOfParticles + 2, new double[]{ROOM_LENGTH/2 + DOOR_LENGTH/2, WALL_Y}, 0, MASS, true));
+        cellIndexMethod.putParticle(new Pedestrian(numberOfParticles + 1, new double[]{ROOM_LENGTH/2 - DOOR_LENGTH/2, WALL_Y}, 0, MASS, true));
+        cellIndexMethod.putParticle(new Pedestrian(numberOfParticles + 2, new double[]{ROOM_LENGTH/2 + DOOR_LENGTH/2, WALL_Y}, 0, MASS, true));
 
     }
 
@@ -83,12 +83,12 @@ public class CrowdSimulation {
      * @param x coordinate to check.
      * @param y coordinate to check.
      * @param radius radius of the new particle.
-     * @param particles list of particles in the cell.
+     * @param pedestrians list of pedestrians in the cell.
      * @return true if there is already a particle on the given coordinates, false otherwise.
      */
-    private static boolean validCords(double x, double y, double radius, Set<Particle> particles) {
+    private static boolean validCords(double x, double y, double radius, Set<Pedestrian> pedestrians) {
 
-        for (Particle p: particles){
+        for (Pedestrian p: pedestrians){
             boolean valid = Math.pow(p.position[0] - x, 2) + Math.pow(p.position[1] - y, 2) > Math.pow(p.radius + radius, 2);
             if (!valid){
                 return false;
@@ -109,15 +109,15 @@ public class CrowdSimulation {
         Integrator integrator = new Beeman(dt);
         cellIndexMethod.setNeighbors();
 
-        for (double t = 0; cellIndexMethod.particles.size() > 2; t+=dt){
+        for (double t = 0; cellIndexMethod.pedestrians.size() > 2; t+=dt){
 
-            integrator.updatePositions(cellIndexMethod.particles);
+            integrator.updatePositions(cellIndexMethod.pedestrians);
 
             updateCells(t);
 
             cellIndexMethod.setNeighbors();
 
-            integrator.updateSpeeds(cellIndexMethod.particles);
+            integrator.updateSpeeds(cellIndexMethod.pedestrians);
 
             updateCells(t);
 
@@ -127,7 +127,7 @@ public class CrowdSimulation {
         }
     }
 
-    public static double[] forces(Particle p) {
+    public static double[] forces(Pedestrian p) {
 
         double[] force = new double[2];
 
@@ -138,11 +138,11 @@ public class CrowdSimulation {
         force = lateralCollision(p, force, 0);
         force = lateralCollision(p, force, ROOM_LENGTH);
 
-        for (Particle neighbour : p.neighbors) {
+        for (Pedestrian neighbour : p.neighbors) {
 
             if (!neighbour.equals(p)){
 
-                /* Particle collision */
+                /* Pedestrian collision */
                 double distance = p.getDistanceTo(neighbour);
                 double superposition = p.radius + neighbour.radius - distance;
 
@@ -181,7 +181,7 @@ public class CrowdSimulation {
         return force;
     }
 
-    private static double[] getTarget(Particle p) {
+    private static double[] getTarget(Pedestrian p) {
         double target[];
         double doorX = ROOM_LENGTH/2 - DOOR_LENGTH/2;
 
@@ -196,7 +196,7 @@ public class CrowdSimulation {
         return target;
     }
 
-    private static double[] wallForce(Particle p) {
+    private static double[] wallForce(Pedestrian p) {
         double force[] = new double[2];
         double superposition = p.radius - (Math.abs(p.position[1] - WALL_Y));
 
@@ -228,7 +228,7 @@ public class CrowdSimulation {
         return force;
     }
 
-    private static double[] lateralCollision(Particle p, double[] force, double wallX){
+    private static double[] lateralCollision(Pedestrian p, double[] force, double wallX){
         double superposition = p.radius - (Math.abs(p.position[0] - wallX));
 
         double dx = wallX - p.position[0];
@@ -255,29 +255,30 @@ public class CrowdSimulation {
         return force;
     }
 
-    private static boolean contactWithWall(Particle p) {
+    private static boolean contactWithWall(Pedestrian p) {
         return p.position[1] > WALL_Y && p.position[1] < (p.radius + WALL_Y) &&
                 (p.position[0] < (p.radius + ROOM_LENGTH/2 - DOOR_LENGTH/2) ||
                         p.position[0] > (ROOM_LENGTH/2 + DOOR_LENGTH/2 - p.radius));
     }
 
     private static void printParticles(int iteration){
-        System.out.println(cellIndexMethod.particles.size());
+        System.out.println(cellIndexMethod.pedestrians.size());
         System.out.println(iteration);
-        for (Particle p: cellIndexMethod.particles)
+        for (Pedestrian p: cellIndexMethod.pedestrians)
             System.out.println(p.position[0] + "\t" + p.position[1] + "\t" + p.radius + "\t" + p.getSpeedModule());
     }
 
     private static void updateCells(double time){
-        List<Particle> removeParticles = new LinkedList<>();
-        for (Particle p: cellIndexMethod.particles) {
+        List<Pedestrian> removePedestrians = new LinkedList<>();
+        for (Pedestrian p: cellIndexMethod.pedestrians) {
             if (!cellIndexMethod.putParticle(p)){
-                removeParticles.add(p);
+                removePedestrians.add(p);
             }
         }
-        for (Particle p: removeParticles){
-            cellIndexMethod.particles.remove(p);
+        for (Pedestrian p: removePedestrians){
+            cellIndexMethod.pedestrians.remove(p);
             statsPrinter.println(time);
         }
     }
+
 }

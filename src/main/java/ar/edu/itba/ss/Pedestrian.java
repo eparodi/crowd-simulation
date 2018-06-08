@@ -2,7 +2,7 @@ package ar.edu.itba.ss;
 
 import java.util.Set;
 
-public class Particle implements Cloneable{
+public class Pedestrian implements Cloneable{
 
     protected int id;
     protected double[] position;
@@ -11,18 +11,18 @@ public class Particle implements Cloneable{
     protected double mass;
     protected double[] acceleration = null;// new double[]{0,0};
     protected double[] previousAcceleration = new double[]{0,0};
-    protected Set<Particle> neighbors;
+    protected Set<Pedestrian> neighbors;
     protected boolean isWall = false;
     Integer cell = null;
 
-    public Particle(int id, double[] position, double radius, double mass){
+    public Pedestrian(int id, double[] position, double radius, double mass){
         this.id = id;
         this.position = position;
         this.radius = radius;
         this.mass = mass;
     }
 
-    public Particle(int id, double[] position, double radius, double mass, boolean isWall){
+    public Pedestrian(int id, double[] position, double radius, double mass, boolean isWall){
         this.id = id;
         this.position = position;
         this.radius = radius;
@@ -30,7 +30,7 @@ public class Particle implements Cloneable{
         this.isWall = isWall;
     }
 
-    public double getDistanceTo(Particle neighbour) {
+    public double getDistanceTo(Pedestrian neighbour) {
         return Math.sqrt(Math.pow(this.position[0] - neighbour.position[0], 2) +
                 Math.pow(this.position[1] - neighbour.position[1], 2));
     }
@@ -40,9 +40,9 @@ public class Particle implements Cloneable{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Particle particle = (Particle) o;
+        Pedestrian pedestrian = (Pedestrian) o;
 
-        return id == particle.id;
+        return id == pedestrian.id;
     }
 
     @Override
@@ -50,8 +50,8 @@ public class Particle implements Cloneable{
         return new Integer(id).hashCode();
     }
 
-    Particle getClone() throws CloneNotSupportedException {
-        return (Particle) super.clone();
+    Pedestrian getClone() throws CloneNotSupportedException {
+        return (Pedestrian) super.clone();
     }
 
     public double getSpeedModule() {

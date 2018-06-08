@@ -8,8 +8,8 @@ public class CellIndexMethod{
     private int matrixSizeColumns;
     private int numberOfCells;
     private double cellLength;
-    private HashMap<Integer, List<Particle>> cells = new HashMap<>();
-    Set<Particle> particles = new HashSet<>();
+    private HashMap<Integer, List<Pedestrian>> cells = new HashMap<>();
+    Set<Pedestrian> pedestrians = new HashSet<>();
 
     public CellIndexMethod(double width, double height, double radius){
         this.matrixSizeRows = (int) Math.ceil(width / radius);
@@ -21,7 +21,7 @@ public class CellIndexMethod{
         }
     }
 
-    private Integer findKeyOfParticle(Particle p){
+    private Integer findKeyOfParticle(Pedestrian p){
         int cellX = (int) Math.floor(p.position[0] / this.cellLength);
         int cellY = (int) Math.floor(p.position[1] / this.cellLength);
         if (cellX > this.matrixSizeRows || cellX < 0 || cellY >= this.matrixSizeColumns || cellY < 0){
@@ -30,7 +30,7 @@ public class CellIndexMethod{
         return cellY * this.matrixSizeRows + cellX;
     }
 
-    private List<Integer> findNeighborsIndexCells(Particle p){
+    private List<Integer> findNeighborsIndexCells(Pedestrian p){
         List<Integer> neighborCells = new LinkedList<>();
         int cellX = p.cell % this.matrixSizeRows;
         int cellY = p.cell / this.matrixSizeRows;
@@ -57,7 +57,7 @@ public class CellIndexMethod{
         return neighborCells;
     }
 
-    public Boolean putParticle(Particle p){
+    public Boolean putParticle(Pedestrian p){
         if (p.cell != null){
             cells.get(p.cell).remove(p);
         }
@@ -67,7 +67,7 @@ public class CellIndexMethod{
             if (cells.get(key) == null){
                 System.err.println(key + " " + p.position[0] + " " + p.position[1]);
             }
-            particles.add(p);
+            pedestrians.add(p);
             cells.get(key).add(p);
             return true;
         }else{
@@ -77,29 +77,29 @@ public class CellIndexMethod{
 
     public void setNeighbors(){
 
-        for (Particle p: this.particles){
+        for (Pedestrian p: this.pedestrians){
             p.neighbors = new HashSet<>();
         }
-        for (Particle p : this.particles){
+        for (Pedestrian p : this.pedestrians){
             List<Integer> index = findNeighborsIndexCells(p);
-//            List<Particle> neighbors = new LinkedList<>();
+//            List<Pedestrian> neighbors = new LinkedList<>();
             for (Integer i : index){
-                List<Particle> particleList = cells.get(i);
-//                neighbors.addAll(particleList);
-                addNeighbor(p, particleList);
+                List<Pedestrian> pedestrianList = cells.get(i);
+//                neighbors.addAll(pedestrianList);
+                addNeighbor(p, pedestrianList);
             }
 
 //            addNeighbor(p, neighbors);
         }
     }
 
-    private void addNeighbor(Particle p, List<Particle> particles){
-        for (Particle particle : particles){
-            if (!particle.equals(p)) {
+    private void addNeighbor(Pedestrian p, List<Pedestrian> pedestrians){
+        for (Pedestrian pedestrian : pedestrians){
+            if (!pedestrian.equals(p)) {
                 try {
-                    p.neighbors.add(particle.getClone());
-                    if (!particle.isWall){
-                        particle.neighbors.add(p.getClone());
+                    p.neighbors.add(pedestrian.getClone());
+                    if (!pedestrian.isWall){
+                        pedestrian.neighbors.add(p.getClone());
                     }
                 } catch (CloneNotSupportedException e) {
                     e.printStackTrace();

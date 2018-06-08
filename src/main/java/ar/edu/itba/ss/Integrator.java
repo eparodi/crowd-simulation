@@ -4,8 +4,8 @@ import java.util.Set;
 
 public interface Integrator {
 
-    void updatePositions(Set<Particle> particles);
+    void updatePositions(Set<Pedestrian> pedestrians);
 
-    void updateSpeeds(Set<Particle> particles);
+    void updateSpeeds(Set<Pedestrian> pedestrians);
 
 }
